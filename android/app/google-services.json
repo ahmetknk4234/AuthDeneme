@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1085035628958",
+    "project_id": "authdeneme-4378e",
+    "storage_bucket": "authdeneme-4378e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1085035628958:android:6e9e4649da79081b59ae8f",
+        "android_client_info": {
+          "package_name": "com.a"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQH0jc6dmkBe-z2b6jMdRunj8If9zv8yc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
