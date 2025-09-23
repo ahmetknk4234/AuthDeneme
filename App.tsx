@@ -1,95 +1,48 @@
-import React, { useState, useEffect } from "react";
-import { View, TextInput, Button, Alert, StyleSheet, Text, Linking } from "react-native";
-import auth from "@react-native-firebase/auth";
+import React from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import MainPage from './src/screens/MainPage';
+import Sepetim from './src/screens/Sepetim';
+import Profile from './src/screens/Profile';
+import Login from './src/screens/Login';
+import MyTabBar from './src/components/MyTabBar';
 
-const App = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [verified, setVerified] = useState<boolean | null>(null);
+const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 
-  useEffect(() => {
-    const unsubscribeAuth = auth().onAuthStateChanged(async (user) => {
-      if (user) {
-        await user.reload();
-        setVerified(user.emailVerified);
-      } else {
-        setVerified(null);
-      }
-    });
-
-    const handleUrl = async (event: { url: string }) => {
-      console.log("📩 Gelen URL:", event.url);
-      await auth().currentUser?.reload();
-      if (auth().currentUser?.emailVerified) {
-        setVerified(true);
-        Alert.alert("✅ Doğrulama Başarılı", "E-postan doğrulandı!");
-      }
-    };
-
-    const subscription = Linking.addEventListener("url", handleUrl);
-    Linking.getInitialURL().then((url) => {
-      if (url) handleUrl({ url });
-    });
-
-    return () => {
-      unsubscribeAuth();
-      subscription.remove();
-    };
-  }, []);
-
-  const handleRegister = async () => {
-    try {
-      const userCredential = await auth().createUserWithEmailAndPassword(email, password);
-      await userCredential.user.sendEmailVerification({
-        url: "https://authdeneme-4378e.web.app", // ✅ sadece domain
-        android: { packageName: "com.authdeneme", installApp: true },
-        handleCodeInApp: true,
-      });
-      Alert.alert("📩 Mail Gönderildi", "Doğrulama mailini kontrol et!");
-    } catch (error: any) {
-      Alert.alert("❌ Hata", error.message);
-    }
-  };
-
-  const handleLogin = async () => {
-    try {
-      const userCredential = await auth().signInWithEmailAndPassword(email, password);
-      await userCredential.user.reload();
-      setVerified(userCredential.user.emailVerified);
-
-      if (userCredential.user.emailVerified) {
-        Alert.alert("✅ Doğrulandı", "Hoşgeldin!");
-      } else {
-        Alert.alert("⚠️ Doğrulama Gerekli", "Maildeki linke tıkla.");
-      }
-    } catch (error: any) {
-      Alert.alert("❌ Hata", error.message);
-    }
-  };
-
+function MainTabs() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Firebase Email Doğrulama</Text>
-      <TextInput placeholder="Email" value={email} onChangeText={setEmail} style={styles.input} autoCapitalize="none" />
-      <TextInput placeholder="Password" secureTextEntry value={password} onChangeText={setPassword} style={styles.input} />
-      <Button title="Kayıt Ol" onPress={handleRegister} />
-      <View style={{ marginTop: 10 }} />
-      <Button title="Giriş Yap" onPress={handleLogin} />
-
-      {verified !== null && (
-        <View style={{ marginTop: 30 }}>
-          <Text style={styles.status}>Doğrulama Durumu: {verified ? "✅ Doğrulandı" : "❌ Henüz Değil"}</Text>
-        </View>
-      )}
-    </View>
+    <Tab.Navigator tabBar={(props) => <MyTabBar {...props} />}>
+      <Tab.Screen
+        name="Anasayfa"
+        component={MainPage}
+        options={{ headerShown: false }}
+      />
+      <Tab.Screen
+              name="Sepetim"
+              component={Sepetim}
+              options={{ headerShown: false }}
+            />
+      <Tab.Screen
+        name="Profil"
+        component={Profile}
+        options={{ headerShown: false }}
+      />
+    </Tab.Navigator>
   );
-};
+}
 
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 20, backgroundColor: "#fff" },
-  title: { fontSize: 22, marginBottom: 20, textAlign: "center", fontWeight: "bold" },
-  input: { borderWidth: 1, borderColor: "#ccc", padding: 10, marginBottom: 10, borderRadius: 8 },
-  status: { fontSize: 18, marginBottom: 10, textAlign: "center" },
-});
-
-export default App;
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Login" component={Login} />
+          <Stack.Screen name="MainTabs" component={MainTabs} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
+  );
+}
