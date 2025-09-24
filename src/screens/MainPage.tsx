@@ -7,12 +7,14 @@ import {
   StyleSheet,
   StatusBar,
   Text,
+  Alert,
   useWindowDimensions,
   ScrollView,
   Button
 } from 'react-native';
 import { TabView, SceneMap } from 'react-native-tab-view';
 import firestore from "@react-native-firebase/firestore";
+import auth from "@react-native-firebase/auth";
 
 const FirstRoute = () => (
   <View style={[styles.container, { backgroundColor: '#ff4081' }]}>
@@ -26,6 +28,21 @@ const SecondRoute = () => {
     const images: any = {
             görsel: require('../img/pizza.png'),
           };
+
+
+    const handleEkle = async (pizzaId: string) => {
+
+        const uid = auth().currentUser?.uid;
+              if (!uid) return;
+
+        await firestore().collection('sepet').add({
+
+            userId: uid,
+            pizzaId: pizzaId,
+            });
+
+        Alert.alert("pizza sepete eklendi");
+        }
 
     useEffect(() => {
         const unsubscribe = firestore()
@@ -52,7 +69,7 @@ const SecondRoute = () => {
                   <View style={styles.buton}>
                           <TouchableOpacity
                                       style={styles.button}
-                                      onPress={() => Alert.alert('Ayarlar butonuna basıldı')}
+                                      onPress={() => handleEkle(item.id)}
                                     >
                                       <Text style={styles.buttonText}>sipariş</Text>
                                     </TouchableOpacity>
@@ -102,7 +119,6 @@ export default function MainPage() {
       <View>
         <ScrollView
           horizontal
-          showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ flexDirection: 'row' }}
         >
           {props.navigationState.routes.map((route: any, i: number) => {

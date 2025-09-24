@@ -110,7 +110,7 @@ const Login = ({ navigation }: any) => {
     const styles = StyleSheet.create({
       container: { flex: 1, justifyContent: "center", padding: 20, backgroundColor: "#fff" },
       title: { fontSize: 22, marginBottom: 20, textAlign: "center", fontWeight: "bold" },
-      input: { borderWidth: 1, borderColor: "#ccc", padding: 10, marginBottom: 10, borderRadius: 8 },
+      input: { color: 'black', borderWidth: 1, borderColor: "#ccc", padding: 10, marginBottom: 10, borderRadius: 8 },
       status: { fontSize: 18, marginBottom: 10, textAlign: "center" },
     });
 

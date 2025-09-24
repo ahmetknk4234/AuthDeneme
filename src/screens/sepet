@@ -1,13 +1,5 @@
-import React, { useState, useEffect } from "react";
-import {
-  SafeAreaView,
-  ScrollView,
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
+import React, { useState, useEffect } from 'react';
+import { SafeAreaView, ScrollView, View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import firestore from "@react-native-firebase/firestore";
 import auth from "@react-native-firebase/auth";
 
@@ -15,72 +7,52 @@ const Sepetim = () => {
   const [Sepet, setSepet] = useState<any[]>([]);
   const [Pizza, setPizza] = useState<any[]>([]);
   const uid = auth().currentUser?.uid;
-
   const images: any = {
-    görsel: require("../img/pizza.png"),
+    görsel: require('../img/pizza.png'),
   };
 
   useEffect(() => {
     if (!uid) return;
 
-    // ✅ Kullanıcının sepetini dinle
     const unsubscribe = firestore()
-      .collection("sepet")
-      .where("userId", "==", uid)
-      .onSnapshot(async (querySnapshot) => {
+      .collection('sepet')
+      .where('userId', '==', uid)
+      .onSnapshot((querySnapshot) => {
         const docs: any[] = [];
-        const pizzaIds: string[] = [];
-
-        querySnapshot.forEach((doc) => {
-          const data = { id: doc.id, ...doc.data() };
-          docs.push(data);
-          pizzaIds.push(data.pizzaId); // sadece pizzaId'leri al
-        });
-
+        querySnapshot.forEach((doc) => docs.push({ id: doc.id, ...doc.data() }));
         setSepet(docs);
-
-        // ✅ Pizza bilgilerini topluca çek
-        if (pizzaIds.length > 0) {
-          const snapshot = await firestore()
-            .collection("pizza")
-            .where(
-              firestore.FieldPath.documentId(),
-              "in",
-              pizzaIds.slice(0, 10) // Firestore "in" max 10 id alır
-            )
-            .get();
-
-          const pizzas = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-
-          setPizza(pizzas);
-        } else {
-          setPizza([]);
-        }
       });
 
-    return () => unsubscribe();
-  }, [uid]);
+    const fetchPizzas = async () => {
+      const pizzaPromises = Sepet.map(async (c) => {
+        const pizzaDoc = await firestore().collection("pizza").doc(c.pizzaId).get();
+        return { id: pizzaDoc.id, ...pizzaDoc.data() };
+      });
 
-  // ✅ Sepetten ürün kaldırma
+      const pizzas = await Promise.all(pizzaPromises);
+      setPizza(pizzas);
+    };
+
+    fetchPizzas();
+    return () => unsubscribe();
+  }, [Sepet]);
+
   const handleDelete = async (pizzaId: string) => {
     if (!uid) return;
 
     const querySnapshot = await firestore()
-      .collection("sepet")
-      .where("userId", "==", uid)
-      .where("pizzaId", "==", pizzaId)
+      .collection('sepet')
+      .where('userId', '==', uid)
+      .where('pizzaId', '==', pizzaId)
       .get();
 
     querySnapshot.forEach(async (doc) => {
-      await firestore().collection("sepet").doc(doc.id).delete();
+      await firestore().collection('sepet').doc(doc.id).delete();
     });
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {Pizza.length === 0 ? (
           <Text style={styles.emptyText}>Sepetiniz boş</Text>
@@ -111,19 +83,19 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   emptyText: {
-    textAlign: "center",
+    textAlign: 'center',
     fontSize: 18,
     marginTop: 50,
-    color: "gray",
+    color: 'gray',
   },
   card: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "floralwhite",
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'floralwhite',
     padding: 12,
     marginBottom: 12,
     borderRadius: 12,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 3,
@@ -136,26 +108,26 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "darkred",
+    backgroundColor: 'darkred',
   },
   itemTitle: {
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
   itemPrice: {
     fontSize: 14,
-    color: "gray",
+    color: 'gray',
     marginTop: 4,
   },
   button: {
-    backgroundColor: "midnightblue",
+    backgroundColor: 'midnightblue',
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 8,
   },
   buttonText: {
-    color: "white",
-    fontWeight: "bold",
+    color: 'white',
+    fontWeight: 'bold',
     fontSize: 14,
   },
 });
