@@ -41,9 +41,6 @@ function MyTabBar({ state, descriptors, navigation }) {
         return (
           <PlatformPressable
             key={route.key}
-            accessibilityState={isFocused ? { selected: true } : {}}
-            accessibilityLabel={options.tabBarAccessibilityLabel}
-            testID={options.tabBarButtonTestID}
             onPress={onPress}
             onLongPress={onLongPress}
             style={{ flex: 1, padding: 12, alignItems: 'center' }}

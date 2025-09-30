@@ -8,29 +8,32 @@ import Sepetim from './src/screens/Sepetim';
 import Profile from './src/screens/Profile';
 import Login from './src/screens/Login';
 import MyTabBar from './src/components/MyTabBar';
+import { UserProvider } from './src/context/userContext';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 function MainTabs() {
   return (
-    <Tab.Navigator tabBar={(props) => <MyTabBar {...props} />}>
-      <Tab.Screen
-        name="Anasayfa"
-        component={MainPage}
-        options={{ headerShown: false }}
-      />
-      <Tab.Screen
-              name="Sepetim"
-              component={Sepetim}
-              options={{ headerShown: false }}
-            />
-      <Tab.Screen
-        name="Profil"
-        component={Profile}
-        options={{ headerShown: false }}
-      />
-    </Tab.Navigator>
+    <UserProvider>
+      <Tab.Navigator tabBar={(props) => <MyTabBar {...props} />}>
+        <Tab.Screen
+          name="Anasayfa"
+          component={MainPage}
+          options={{ headerShown: false }}
+        />
+        <Tab.Screen
+          name="Sepetim"
+          component={Sepetim}
+          options={{ headerShown: false }}
+        />
+        <Tab.Screen
+          name="Profil"
+          component={Profile}
+          options={{ headerShown: false }}
+        />
+      </Tab.Navigator>
+    </UserProvider>
   );
 }
 

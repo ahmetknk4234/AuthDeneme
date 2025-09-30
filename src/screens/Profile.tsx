@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Image,
@@ -10,50 +10,78 @@ import {
   View,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import firestore from "@react-native-firebase/firestore";
-import auth from "@react-native-firebase/auth";
-
+import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
+import { UserContext } from '../context/userContext';
 
 const Profile = () => {
-  const [AdSoyad, setAdSoyad] = useState('');
-  const [Mail, setMail] = useState('');
-  const [Number, setNumber] = useState('');
-  const [Address, setAddress] = useState('');
+  const { user, updateUser } = useContext(UserContext);
 
+  const [AdSoyad, setAdSoyad] = useState(user.name);
+  const [Mail, setMail] = useState(user.email);
+  const [Number, setNumber] = useState(user.number);
+  const [Address, setAddress] = useState(user.address);
+
+  const uid = auth().currentUser?.uid;
+
+  // İlk açılışta Firestore'dan oku
   useEffect(() => {
-      const uid = auth().currentUser?.uid;
-      if (!uid) return;
+    if (!uid) return;
 
-      const unsubscribe = firestore()
-        .collection("users")
-        .doc(uid)
-        .onSnapshot((doc) => {
-          setMail(doc.data().email);
-          setAddress(doc.data().adres);
-          setNumber(doc.data().numara);
-          setAdSoyad(doc.data().adsoyad);
-        });
+    const unsubscribe = firestore()
+      .collection('users')
+      .doc(uid)
+      .onSnapshot(doc => {
+        if (doc.exists) {
+          const data = doc.data();
+          if (data) {
+            const updatedUser = {
+              name: data.adsoyad || '',
+              email: data.email || '',
+              number: data.numara || '',
+              address: data.adres || '',
+            };
 
-      return unsubscribe;
-    }, []);
+            // hem state'e hem context'e set et
+            setAdSoyad(updatedUser.name);
+            setMail(updatedUser.email);
+            setNumber(updatedUser.number);
+            setAddress(updatedUser.address);
 
-  const handleGuncelle = () => {
-        const uid = auth().currentUser?.uid;
-              if (!uid) return;
+            updateUser(updatedUser);
+          }
+        }
+      });
 
-              const unsubscribe = firestore()
-                .collection("users")
-                .doc(uid)
-                .update({
-                    adsoyad: AdSoyad,
-                    email: Mail,
-                    numara: Number,
-                    adres: Address,
-                    })
+    return () => unsubscribe();
+  }, [uid]);
 
-        Alert.alert("Kullanıcı bilgileri güncellendi!");
-      }
+  // Firestore + Context güncelleme
+  const handleGuncelle = async () => {
+    if (!uid) return;
 
+    try {
+      await firestore().collection('users').doc(uid).update({
+        adsoyad: AdSoyad,
+        email: Mail,
+        numara: Number,
+        adres: Address,
+      });
+
+      // Context'i de güncelle
+      updateUser({
+        name: AdSoyad,
+        email: Mail,
+        number: Number,
+        address: Address,
+      });
+
+      Alert.alert('Kullanıcı bilgileri güncellendi!');
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Güncelleme hatası!', String(error));
+    }
+  };
 
   return (
     <SafeAreaView style={styles.anaekran}>
@@ -99,10 +127,7 @@ const Profile = () => {
             value={Address}
           />
 
-          <TouchableOpacity
-            style={styles.button1}
-            onPress={handleGuncelle}
-          >
+          <TouchableOpacity style={styles.button1} onPress={handleGuncelle}>
             <Text style={styles.buttonText}>Güncelle</Text>
           </TouchableOpacity>
 
@@ -125,7 +150,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center', // dikey ortalama
+    justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 20,
   },

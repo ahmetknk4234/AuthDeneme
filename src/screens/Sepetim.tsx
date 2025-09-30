@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
-  SafeAreaView,
   ScrollView,
   View,
   Text,
@@ -10,10 +10,13 @@ import {
 } from "react-native";
 import firestore from "@react-native-firebase/firestore";
 import auth from "@react-native-firebase/auth";
+import notifee, { TriggerType, TimestampTrigger, RepeatFrequency } from '@notifee/react-native';
+import { UserContext } from '../context/userContext';
 
 const Sepetim = () => {
   const [Sepet, setSepet] = useState<any[]>([]);
   const [Pizza, setPizza] = useState<any[]>([]);
+  const { user } = useContext(UserContext);
   const uid = auth().currentUser?.uid;
 
   const images: any = {
@@ -46,7 +49,7 @@ const Sepetim = () => {
             .where(
               firestore.FieldPath.documentId(),
               "in",
-              pizzaIds.slice(0, 10) // Firestore "in" max 10 id alır
+              pizzaIds
             )
             .get();
 
@@ -77,13 +80,43 @@ const Sepetim = () => {
     querySnapshot.forEach(async (doc) => {
       await firestore().collection("sepet").doc(doc.id).delete();
     });
+
+    await notifee.requestPermission();//bildirm izni isteme
+
+    const date = new Date(Date.now() + 10 * 1000); // milisaniye cinsinden bildirim zamanı burada 10 saniye sonrası
+
+    // Create a time-based trigger
+    const trigger: TimestampTrigger = { //bildirimin triggerlanma koşulları
+      type: TriggerType.TIMESTAMP,
+      timestamp: date.getTime(),
+      repeatFrequency: RepeatFrequency.HOURLY,
+    };
+
+    const channelId = await notifee.createChannel({// bildirimin gönderileceği kanal
+      id: 'default',
+      name: 'Default Channel',
+
+    });
+
+    // Create a trigger notification
+    await notifee.createTriggerNotification(// gönderilecek bildirim
+      {
+        title: 'bildiirm',
+        body: 'sepetten ürün kaldırıldı saatlik tekrar',
+        android: {
+          channelId: 'default',
+        },
+      },
+      trigger,
+    );
+
   };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {Pizza.length === 0 ? (
-          <Text style={styles.emptyText}>Sepetiniz boş</Text>
+          <Text style={styles.emptyText}>{user.name}</Text>
         ) : (
           Pizza.map((item) => (
             <View key={item.id} style={styles.card}>
